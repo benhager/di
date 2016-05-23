@@ -43,7 +43,7 @@ fi
 
 if [[ "$LATEST_VERSION" == "$INSTALLED_VERSION" ]]
 then
-	echo "$NAME: Up-To-Date (Installed/Latest Version = $INSTALLED_VERSION)"
+	echo "$NAME: Up-To-Date ($INSTALLED_VERSION)"
 	exit 0
 fi
 
@@ -67,8 +67,13 @@ echo "$NAME: Downloading $URL to $FILENAME"
 curl --continue-at - --progress-bar --fail --location --output "$FILENAME" "$URL"
 
 EXIT="$?"
+
 	## exit 22 means 'the file was already fully downloaded'
 [ "$EXIT" != "0" -a "$EXIT" != "22" ] && echo "$NAME: Download of $URL failed (EXIT = $EXIT)" && exit 0
+
+[[ ! -e "$FILENAME" ]] && echo "$NAME: $FILENAME does not exist." && exit 0
+
+[[ ! -s "$FILENAME" ]] && echo "$NAME: $FILENAME is zero bytes." && rm -f "$FILENAME" && exit 0
 
 echo "$NAME: Installing $FILENAME to $INSTALL_TO:h/"
 
@@ -80,12 +85,13 @@ EXIT="$?"
 if [ "$EXIT" = "0" ]
 then
 	echo "$NAME: Installation of $INSTALL_TO was successful."
-
+	
 	[[ "$LAUNCH" == "yes" ]] && open -a "$INSTALL_TO"
-
+	
 else
 	echo "$NAME: Installation of $INSTALL_TO failed (\$EXIT = $EXIT)\nThe downloaded file can be found at $FILENAME."
 fi
+
 
 exit 0
 #EOF
