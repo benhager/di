@@ -1,9 +1,9 @@
 #!/bin/zsh -f
-# Purpose:
+# Purpose: 
 #
 # From:	Timothy J. Luoma
 # Mail:	luomat at gmail dot com
-# Date:	2016-03-30
+# Date:	2016-06-02
 
 NAME="$0:t:r"
 
@@ -14,29 +14,13 @@ else
 	PATH='/usr/local/scripts:/usr/local/bin:/usr/bin:/usr/sbin:/sbin:/bin'
 fi
 
-INSTALL_TO='/Applications/Marked 2.app'
+INSTALL_TO="/Applications/Soundnode.app" 
 
-INSTALLED_VERSION=`defaults read "$INSTALL_TO/Contents/Info" CFBundleShortVersionString 2>/dev/null || echo '0'`
+INSTALLED_VERSION=`defaults read "$INSTALL_TO/Contents/Info" CFBundleVersion 2>/dev/null || echo '0'`
 
-XML_FEED="https://updates.marked2app.com/marked.xml"
+URL='http://www.soundnodeapp.com/downloads/mac/Soundnode-App.zip'
 
-INFO=($(curl -sfL "$XML_FEED" \
-| tr -s ' ' '\012' \
-| egrep 'sparkle:shortVersionString=|url=' \
-| head -2 \
-| sort \
-| awk -F'"' '/^/{print $2}'))
-
-	# "Sparkle" will always come before "url" because of "sort"
-LATEST_VERSION="$INFO[1]"
-URL="$INFO[2]"
-
-	# If any of these are blank, we should not continue
-if [ "$INFO" = "" -o "$LATEST_VERSION" = "" -o "$URL" = "" ]
-then
-	echo "$NAME: Error: bad data received:\nINFO: $INFO"
-	exit 0
-fi
+LATEST_VERSION=`curl -sfL https://api.github.com/repos/Soundnode/soundnode-app/releases | fgrep tag_name | head -1 | tr -dc '[0-9].'`
 
 
 if [[ "$LATEST_VERSION" == "$INSTALLED_VERSION" ]]
@@ -51,14 +35,18 @@ is-at-least "$LATEST_VERSION" "$INSTALLED_VERSION"
 
 if [ "$?" = "0" ]
 then
-	echo "$NAME: Up-To-Date (Installed = $INSTALLED_VERSION vs Latest = $LATEST_VERSION)"
+	echo "$NAME: Up-To-Date ($LATEST_VERSION)"
 	exit 0
 fi
 
 echo "$NAME: Outdated (Installed = $INSTALLED_VERSION vs Latest = $LATEST_VERSION)"
 
+####|####|####|####|####|####|####|####|####|####|####|####|####|####|####
+#
+#		Here’s the download section
+#
 
-FILENAME="$HOME/Downloads/Marked-${LATEST_VERSION}.zip"
+FILENAME="$HOME/Downloads/Soundnode-$LATEST_VERSION.zip"
 
 echo "$NAME: Downloading $URL to $FILENAME"
 
@@ -73,17 +61,27 @@ EXIT="$?"
 
 [[ ! -s "$FILENAME" ]] && echo "$NAME: $FILENAME is zero bytes." && rm -f "$FILENAME" && exit 0
 
+####|####|####|####|####|####|####|####|####|####|####|####|####|####|####
+#
+#		Here’s the 'move the old version aside' section 
+#
+
 
 if [ -e "$INSTALL_TO" ]
 then
 		# Quit app, if running
-	pgrep -xq "Marked 2" \
+	pgrep -xq "Soundnode" \
 	&& LAUNCH='yes' \
-	&& osascript -e 'tell application "Marked 2" to quit'
+	&& osascript -e 'tell application "Soundnode" to quit'
 
-		# move installed version to trash
-	mv -vf "$INSTALL_TO" "$HOME/.Trash/Marked 2.$INSTALLED_VERSION.app"
+		# move installed version to trash 
+	mv -vf "$INSTALL_TO" "$HOME/.Trash/Soundnode.$INSTALLED_VERSION.app"
 fi
+
+####|####|####|####|####|####|####|####|####|####|####|####|####|####|####
+#
+#		Here’s the "install the new version" section
+#
 
 
 
@@ -97,14 +95,12 @@ EXIT="$?"
 if [ "$EXIT" = "0" ]
 then
 	echo "$NAME: Installation of $INSTALL_TO was successful."
-
+	
 	[[ "$LAUNCH" == "yes" ]] && open -a "$INSTALL_TO"
-
+	
 else
 	echo "$NAME: Installation of $INSTALL_TO failed (\$EXIT = $EXIT)\nThe downloaded file can be found at $FILENAME."
 fi
-
-
 
 exit 0
 #EOF

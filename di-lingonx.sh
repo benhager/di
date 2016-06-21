@@ -1,9 +1,9 @@
 #!/bin/zsh -f
-# Purpose:
+# Purpose: 
 #
 # From:	Timothy J. Luoma
 # Mail:	luomat at gmail dot com
-# Date:	2016-03-30
+# Date:	2016-05-29
 
 NAME="$0:t:r"
 
@@ -14,11 +14,11 @@ else
 	PATH='/usr/local/scripts:/usr/local/bin:/usr/bin:/usr/sbin:/sbin:/bin'
 fi
 
-INSTALL_TO='/Applications/Marked 2.app'
+INSTALL_TO='/Applications/Lingon X.app'
 
 INSTALLED_VERSION=`defaults read "$INSTALL_TO/Contents/Info" CFBundleShortVersionString 2>/dev/null || echo '0'`
 
-XML_FEED="https://updates.marked2app.com/marked.xml"
+XML_FEED='https://www.peterborgapps.com/updates/lingonx2-appcast.xml'
 
 INFO=($(curl -sfL "$XML_FEED" \
 | tr -s ' ' '\012' \
@@ -51,14 +51,13 @@ is-at-least "$LATEST_VERSION" "$INSTALLED_VERSION"
 
 if [ "$?" = "0" ]
 then
-	echo "$NAME: Up-To-Date (Installed = $INSTALLED_VERSION vs Latest = $LATEST_VERSION)"
+	echo "$NAME: Up-To-Date ($LATEST_VERSION)"
 	exit 0
 fi
 
 echo "$NAME: Outdated (Installed = $INSTALLED_VERSION vs Latest = $LATEST_VERSION)"
 
-
-FILENAME="$HOME/Downloads/Marked-${LATEST_VERSION}.zip"
+FILENAME="$HOME/Downloads/LingonX-${LATEST_VERSION}.zip"
 
 echo "$NAME: Downloading $URL to $FILENAME"
 
@@ -77,15 +76,13 @@ EXIT="$?"
 if [ -e "$INSTALL_TO" ]
 then
 		# Quit app, if running
-	pgrep -xq "Marked 2" \
+	pgrep -xq "Lingon X" \
 	&& LAUNCH='yes' \
-	&& osascript -e 'tell application "Marked 2" to quit'
+	&& osascript -e 'tell application "Lingon X" to quit'
 
-		# move installed version to trash
-	mv -vf "$INSTALL_TO" "$HOME/.Trash/Marked 2.$INSTALLED_VERSION.app"
+		# move installed version to trash 
+	mv -vf "$INSTALL_TO" "$HOME/.Trash/Lingon X.$INSTALLED_VERSION.app"
 fi
-
-
 
 echo "$NAME: Installing $FILENAME to $INSTALL_TO:h/"
 
@@ -97,12 +94,13 @@ EXIT="$?"
 if [ "$EXIT" = "0" ]
 then
 	echo "$NAME: Installation of $INSTALL_TO was successful."
-
+	
 	[[ "$LAUNCH" == "yes" ]] && open -a "$INSTALL_TO"
-
+	
 else
 	echo "$NAME: Installation of $INSTALL_TO failed (\$EXIT = $EXIT)\nThe downloaded file can be found at $FILENAME."
 fi
+
 
 
 
