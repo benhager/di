@@ -24,6 +24,9 @@ INSTALL_TO="/Applications/$APPNAME.app"
 INSTALLED_VERSION=`defaults read "$INSTALL_TO/Contents/Info" CFBundleShortVersionString 2>/dev/null || echo '0'`
 BUILD_NUMBER=`defaults read "$INSTALL_TO/Contents/Info" CFBundleVersion 2>/dev/null || echo 600000`
 
+# echo $INSTALLED_VERSION
+# echo $BUILD_NUMBER
+
 FEED_URL="https://updates.edovia.com/com.edovia.screens.mac/appcast.xml"
 
 INFO=($(curl -sfL $FEED_URL \
@@ -33,9 +36,11 @@ INFO=($(curl -sfL $FEED_URL \
 | awk -F'"' '//{print $2}'))
 
 URL="$INFO[1] $INFO[2].zip"
-URL="$( echo "$URL" | sed 's/ /%20/g' )"
+# URL="$( echo "$URL" | sed 's/ /%20/g' )"
+# echo $URL
 
 LATEST_VERSION="$INFO[2]"
+# echo $LATEST_VERSION
 
 if [[ "$LATEST_VERSION" == "$INSTALLED_VERSION" ]]
  then
@@ -68,6 +73,11 @@ EXIT="$?"
 	## exit 22 means 'the file was already fully downloaded'
 [ "$EXIT" != "0" -a "$EXIT" != "22" ] && echo "$NAME: Download of $URL failed (EXIT = $EXIT)" && exit 0
 
+if [ -e "$INSTALL_TO" ]
+then
+	pgrep -qx "$APPNAME" && LAUNCH='yes' && killall "$APPNAME"
+	mv -f "$INSTALL_TO" "$HOME/.Trash/$APPNAME.$INSTALLED_VERSION.app"
+fi
 
 echo "$NAME: Installing $FILENAME to $INSTALL_TO:h/"
 
